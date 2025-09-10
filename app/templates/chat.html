@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot Assistant</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        #chat-container { scroll-behavior: smooth; }
+        .chat-bubble { max-width: 85%; word-wrap: break-word; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .new-message { animation: fadeIn 0.3s ease-out; }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body class="bg-gray-100 flex flex-col h-screen">
+
+    <header class="bg-white shadow-sm p-4 border-b">
+        <h1 class="text-xl font-semibold text-gray-800 text-center">Notion Assistant</h1>
+    </header>
+
+    <main id="chat-container" class="flex-1 p-4 overflow-y-auto space-y-4">
+        <div id="chat-messages">
+             <!-- Pesan sambutan -->
+            <div class="flex justify-start new-message">
+                <div class="bg-white text-gray-800 p-3 rounded-lg rounded-bl-none shadow chat-bubble">
+                    <p>Halo! Silakan ajukan pertanyaan mengenai dokumen yang ada di Notion.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-white p-3 border-t">
+        <form id="chat-form" class="flex items-center space-x-3">
+            <input type="text" id="message-input" placeholder="Ketik pesan..." autocomplete="off" class="flex-1 p-3 border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <button type="submit" class="bg-blue-600 text-white p-3 rounded-full hover:bg-blue-700 focus:outline-none disabled:bg-gray-400 transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+            </button>
+        </form>
+    </footer>
+
+    <script>
+        const chatForm = document.getElementById('chat-form');
+        const messageInput = document.getElementById('message-input');
+        const chatMessages = document.getElementById('chat-messages');
+        const chatContainer = document.getElementById('chat-container');
+        const submitButton = chatForm.querySelector('button');
+
+        // --- LOGIKA BARU UNTUK HISTORY ---
+        let sessionId = crypto.randomUUID(); // Membuat session ID unik saat halaman dimuat
+        let chatHistory = []; // Array untuk menyimpan riwayat pesan
+
+        function addMessage(text, sender) {
+            const messageWrapper = document.createElement('div');
+            messageWrapper.className = `flex new-message ${sender === 'user' ? 'justify-end' : 'justify-start'}`;
+            
+            const bubble = document.createElement('div');
+            bubble.className = `p-3 rounded-lg shadow chat-bubble ${sender === 'user' ? 'bg-blue-600 text-white rounded-br-none' : 'bg-white text-gray-800 rounded-bl-none'}`;
+            
+            if (sender === 'bot' && text === '...') {
+                bubble.innerHTML = `<div class="flex items-center space-x-1"><span class="w-2 h-2 bg-gray-400 rounded-full animate-pulse"></span><span class="w-2 h-2 bg-gray-400 rounded-full animate-pulse" style="animation-delay:0.2s"></span><span class="w-2 h-2 bg-gray-400 rounded-full animate-pulse" style="animation-delay:0.4s"></span></div>`;
+            } else {
+                bubble.textContent = text;
+            }
+            
+            messageWrapper.appendChild(bubble);
+            chatMessages.appendChild(messageWrapper);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            return bubble;
+        }
+
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const messageText = messageInput.value.trim();
+            if (!messageText) return;
+
+            addMessage(messageText, 'user');
+            // Tambahkan pesan pengguna ke riwayat
+            chatHistory.push({ role: 'user', content: messageText });
+
+            const loadingBubble = addMessage('...', 'bot');
+            messageInput.value = '';
+            submitButton.disabled = true;
+
+            try {
+                const response = await fetch('/api/ask', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    // --- PERBAIKAN DI SINI ---
+                    // Pastikan body JSON sesuai dengan model ChatRequest di backend
+                    body: JSON.stringify({
+                        question: messageText,
+                        session_id: sessionId,
+                        history: chatHistory// Kirim semua history KECUALI pesan terakhir
+                    }),
+                });
+
+                if (!response.ok) throw new Error(`HTTP error ${response.status}`);
+                
+                const data = await response.json();
+                loadingBubble.textContent = data.text;
+                // Tambahkan respons bot ke riwayat
+                chatHistory.push({ role: 'assistant', content: data.text });
+
+            } catch (error) {
+                console.error('Error:', error);
+                loadingBubble.textContent = 'Maaf, terjadi kesalahan.';
+                // Hapus pesan pengguna dari riwayat jika terjadi error
+                chatHistory.pop(); 
+            } finally {
+                submitButton.disabled = false;
+                messageInput.focus();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,76 @@
+# # FastAPI dan server
+# fastapi
+# uvicorn[standard]
+
+# # LangChain dan komponen pendukung
+# langchain
+# langchain-community  # untuk dukungan Ollama
+# langchain-core
+
+# # Untuk akses ke Ollama (via HTTP)
+# httpx
+
+# # Tokenizer (opsional, untuk hitung jumlah token)
+# tiktoken
+
+# # Vector Store (untuk RAG, jika pakai FAISS)
+# faiss-cpu
+
+# # Integrasi dengan Notion
+# notion-client
+
+# # Penanganan file dan config
+# python-dotenv
+# pydantic
+# aiofiles
+# Jinja2  # untuk rendering template jika dibutuhkan
+
+# # Debugging / pengembangan
+# #ipython
+
+
+# --- Core Backend Framework ---
+# Untuk membangun server API dan menjalankannya.
+fastapi
+uvicorn[standard]
+
+# --- Konfigurasi & Templating ---
+# Untuk memuat variabel dari file .env.
+python-dotenv
+
+# Untuk merender halaman HTML (UI Webview).
+jinja2
+
+# --- Integrasi Notion ---
+# Klien resmi untuk berinteraksi dengan Notion API.
+notion-client
+
+# --- Embedding & Vector Store ---
+# Untuk mengubah teks menjadi vektor (embedding).
+sentence-transformers
+
+# Untuk menyimpan dan mencari vektor secara efisien (versi CPU).
+faiss-cpu
+
+# Diperlukan oleh FAISS dan sentence-transformers.
+numpy
+
+# Diperlukan untuk menyimpan dan memuat objek Python (seperti daftar teks).
+# pickle5
+
+# --- LLM & LangChain ---
+# Pustaka inti untuk membangun alur kerja dengan LLM.
+langchain
+
+# Komponen dasar LangChain.
+langchain-core
+
+# Untuk berinteraksi dengan model yang berjalan di Ollama.
+langchain-ollama
+
+# Untuk berinteraksi dengan API resmi Mistral AI.
+langchain-mistralai
+
+# Untuk berinteraksi dengan API resmi Qwen AI
+langchain-openai
+
